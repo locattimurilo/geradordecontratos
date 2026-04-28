@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gerador de Contrato Administrativo</title>
+<script src="https://cdn.jsdelivr.net/npm/pizzip@3.1.4/dist/pizzip.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/docxtemplater@3.42.1/build/docxtemplater.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/file-saver@2.0.5/dist/FileSaver.min.js"></script>
+<style>
+:root {
+  --azul:#0275C5; --azul-e:#015ea0; --fundo:#f3f6fb;
+  --borda:#e4e8ef; --texto:#2c2f36; --cinza:#6b7280;
+  --ok:#dcfce7; --ok-t:#15803d; --ok-b:#bbf7d0;
+  --err:#fee2e2; --err-t:#b91c1c; --err-b:#fecaca;
+  --info:#eff6ff; --info-t:#1d4ed8; --info-b:#bfdbfe;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Segoe UI',Roboto,sans-serif;background:var(--fundo);color:var(--texto)}
+.topo{background:var(--azul);padding:18px 24px;text-align:center;color:#fff;font-size:20px;font-weight:700}
+.card{max-width:1020px;margin:28px auto 0;background:#fff;border-radius:16px;box-shadow:0 4px 24px rgba(0,0,0,.07);overflow:hidden}
+.card-h{background:var(--azul);color:#fff;padding:13px 24px;font-size:15px;font-weight:700}
+.corpo{padding:24px}
+/* Seções */
+.sec{margin:28px 0 10px;font-size:13px;font-weight:700;color:var(--azul);
+  border-bottom:2px solid var(--borda);padding-bottom:6px;text-transform:uppercase;letter-spacing:.5px}
+/* Campos */
+.campo{margin-bottom:16px}
+.campo label{display:block;font-weight:600;font-size:12px;color:var(--cinza);
+  margin-bottom:5px;text-transform:uppercase;letter-spacing:.3px}
+.campo input,.campo textarea,.campo select{
+  width:100%;padding:9px 11px;border:1px solid var(--borda);border-radius:9px;
+  font-size:14px;font-family:inherit;color:var(--texto);transition:border-color .15s}
+.campo input:focus,.campo textarea:focus{outline:none;border-color:var(--azul)}
+.hint{font-size:11px;color:#9ca3af;margin-top:3px}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:18px}
+/* Template box */
+.tbox{background:#eaf3fb;border:1px dashed var(--azul);border-radius:12px;padding:16px 20px;margin-bottom:22px}
+.tbox-tit{font-weight:700;font-size:13px;color:var(--azul);margin-bottom:10px;text-transform:uppercase}
+.tstatus{display:flex;align-items:center;gap:10px;font-size:13px;
+  padding:9px 13px;border-radius:8px;margin-bottom:10px;line-height:1.4}
+.tstatus.ok {background:var(--ok); color:var(--ok-t); border:1px solid var(--ok-b)}
+.tstatus.err{background:var(--err);color:var(--err-t);border:1px solid var(--err-b)}
+.tstatus.info{background:var(--info);color:var(--info-t);border:1px solid var(--info-b)}
+.t-toggle{font-size:12px;color:var(--azul);cursor:pointer;
+  text-decoration:underline;background:none;border:none;padding:0}
+.t-manual{margin-top:12px}
+/* Itens */
+.item-card{border:1px solid var(--borda);border-radius:12px;padding:16px 18px;
+  margin-bottom:12px;position:relative;background:#fafbfc}
+.item-tit{font-weight:700;font-size:13px;color:var(--azul);margin-bottom:12px}
+.btn-rm{position:absolute;top:12px;right:14px;background:none;border:none;
+  color:#dc2626;font-size:20px;cursor:pointer;line-height:1;padding:2px 6px;border-radius:6px}
+.btn-rm:hover{background:#fee2e2}
+.btn-add{display:flex;align-items:center;gap:8px;padding:9px 18px;
+  background:#eff6ff;color:var(--azul);border:1px dashed var(--azul);
+  border-radius:9px;font-size:13px;font-weight:600;cursor:pointer;margin-top:4px;transition:background .15s}
+.btn-add:hover{background:#dbeafe}
+/* Botões */
+.botoes{margin-top:28px;display:flex;gap:12px;flex-wrap:wrap}
+.btn{padding:12px 26px;border:none;border-radius:10px;font-weight:700;
+  font-size:14px;cursor:pointer;transition:background .15s,transform .1s;font-family:inherit}
+.btn:active{transform:scale(.98)}
+.btn-g{background:var(--azul);color:#fff}
+.btn-g:hover{background:var(--azul-e)}
+.btn-l{background:#e5e7eb;color:#374151}
+.btn-l:hover{background:#d1d5db}
+footer{background:var(--azul);color:rgba(255,255,255,.7);text-align:center;
+  padding:18px;font-size:12px;margin-top:40px}
+code{font-size:12px;background:rgba(0,0,0,.07);padding:1px 5px;border-radius:4px}
+@media(max-width:640px){.g2,.g3{grid-template-columns:1fr}.corpo{padding:16px}}
+</style>
+</head>
+<body>
+
+<div class="topo">📄 Gerador de Contrato Administrativo</div>
+
+<div class="card">
+  <div class="card-h">Dados do Contrato</div>
+  <div class="corpo">
+
+    <!-- TEMPLATE -->
+    <div class="tbox">
+      <div class="tbox-tit">📁 Template do Contrato (.docx)</div>
+      <div id="tstatus" class="tstatus info">⏳ Buscando template em <code>/template/template_contrato.docx</code>…</div>
+      <button class="t-toggle" onclick="toggleManual()">Selecionar arquivo manualmente</button>
+      <div class="t-manual" id="tmanual" style="display:none">
+        <input type="file" id="tfile" accept=".docx">
+      </div>
+    </div>
+
+    <form id="form">
+
+      <!-- IDENTIFICAÇÃO -->
+      <div class="sec">📋 Identificação</div>
+      <div class="g2">
+        <div class="campo"><label>Nº do Processo</label><input name="numero_processo" placeholder="Ex: 91/2026"></div>
+        <div class="campo"><label>Nº do Contrato</label><input name="numero_contrato" placeholder="Ex: 026/2026"></div>
+      </div>
+
+      <!-- CONTRATANTE -->
+      <div class="sec">🏛️ Contratante</div>
+      <div class="campo"><label>Nome da Contratante</label><input name="nome_contratante" placeholder="Razão social completa da entidade contratante"></div>
+      <div class="g2">
+        <div class="campo"><label>CNPJ da Contratante</label><input name="cnpj_contratante" placeholder="00.000.000/0001-00"></div>
+        <div class="campo">
+          <label>Qualificação da Contratante</label>
+          <input name="qualificacao_contratante" placeholder="Ex: órgão da Administração Municipal indireta, localizada à Rua…">
+          <div class="hint">Descrição jurídica e endereço da instituição</div>
+        </div>
+      </div>
+      <div class="g3">
+        <div class="campo"><label>Nome do Ordenador de Despesas</label><input name="nome_ordenador" placeholder="Nome completo"></div>
+        <div class="campo"><label>Cargo do Ordenador</label><input name="cargo_ordenador" placeholder="Ex: Presidente / Diretor"></div>
+        <div class="campo"><label>CPF do Ordenador</label><input name="cpf_ordenador" placeholder="000.000.000-00"></div>
+      </div>
+      <div class="g2">
+        <div class="campo"><label>Nome do Gestor do Contrato</label><input name="nome_gestor" placeholder="Nome completo"></div>
+        <div class="campo"><label>Cargo do Gestor</label><input name="cargo_gestor" placeholder="Ex: Diretor Administrativo"></div>
+      </div>
+      <div class="g2">
+        <div class="campo"><label>Nome do(s) Fiscal(is)</label><input name="nome_fiscais" placeholder="Nome completo ou nomes separados por 'e'"></div>
+        <div class="campo"><label>Cargo do(s) Fiscal(is)</label><input name="cargo_fiscais" placeholder="Ex: Assessor de Gabinete"></div>
+      </div>
+
+      <!-- CONTRATADA -->
+      <div class="sec">🏢 Contratada</div>
+      <div class="campo"><label>Nome da Contratada</label><input name="nome_contratada" placeholder="Razão social completa"></div>
+      <div class="g2">
+        <div class="campo"><label>CNPJ da Contratada</label><input name="cnpj_contratada" placeholder="00.000.000/0001-00"></div>
+        <div class="campo"><label>CPF do Representante Legal</label><input name="cpf_representante" placeholder="000.000.000-00"></div>
+      </div>
+      <div class="g2">
+        <div class="campo"><label>Nome do Representante Legal</label><input name="representante_contratada" placeholder="Nome completo"></div>
+        <div class="campo"><label>Endereço da Contratada</label><input name="endereco_contratada" placeholder="Rua, nº, Bairro, Cidade/UF, CEP"></div>
+      </div>
+
+      <!-- OBJETO -->
+      <div class="sec">📝 Objeto</div>
+      <div class="campo">
+        <label>Descrição do Objeto (Cláusula 1.1)</label>
+        <textarea name="objeto" rows="3" placeholder="Descreva o objeto do contrato — serviço, aquisição de materiais, obra, etc."></textarea>
+      </div>
+
+      <!-- ITENS DA TABELA -->
+      <div class="sec">📦 Itens / Serviços / Materiais</div>
+      <div id="itensWrap"></div>
+      <button type="button" class="btn-add" onclick="adicionarItem()">＋ Adicionar item</button>
+
+      <!-- VALORES E PRAZOS -->
+      <div class="sec">💰 Valores e Prazos</div>
+      <div class="g3">
+        <div class="campo"><label>Valor Global (R$)</label><input name="valor_global" placeholder="Ex: 8.750,00"></div>
+        <div class="campo"><label>Valor por Extenso</label><input name="valor_global_extenso" placeholder="Ex: oito mil setecentos e cinquenta reais"></div>
+        <div class="campo">
+          <label>Valor — Cláusula 5ª (R$)</label>
+          <input name="valor_numerico" placeholder="Ex: 8.750,00">
+          <div class="hint">Normalmente igual ao valor global</div>
+        </div>
+      </div>
+      <div class="g2">
+        <div class="campo"><label>Vigência do Contrato</label><input name="vigencia" placeholder="Ex: 6 (seis) meses"></div>
+        <div class="campo"><label>Prazo de Pagamento</label><input name="prazo_pagamento" placeholder="Ex: 28 dias úteis a partir do recebimento da NF"></div>
+      </div>
+
+      <!-- FINALIZAÇÃO -->
+      <div class="sec">📅 Finalização e Foro</div>
+      <div class="g2">
+        <div class="campo"><label>Data de Assinatura</label><input name="data_assinatura" placeholder="Ex: 17/04/2026"></div>
+        <div class="campo"><label>Data de Início da Vigência</label><input name="data_inicio_vigencia" placeholder="Ex: 17/04/2026"></div>
+      </div>
+      <div class="g2">
+        <div class="campo"><label>Cidade e Data por Extenso</label><input name="cidade_data" placeholder="Ex: São Carlos, 17 de abril de 2026"></div>
+        <div class="campo"><label>Comarca (Foro)</label><input name="comarca" placeholder="Ex: São Carlos"></div>
+      </div>
+      <div class="campo"><label>Dotação Orçamentária</label><input name="dotacao_orcamentaria" placeholder="Ex: 44 - 27.01.12.366.4001.2.401.3.3.90.39.04.1100000"></div>
+
+      <div class="botoes">
+        <button type="button" class="btn btn-g" onclick="gerarContrato()">⬇️ Gerar Contrato</button>
+        <button type="button" class="btn btn-l" onclick="limpar()">🗑️ Limpar</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<footer>Ferramenta de automação de documentos administrativos</footer>
+
+<script>
+let tplBuffer = null;
+let itemCount = 0;
+
+// ── Template ──────────────────────────────────────────────────────
+async function autoLoad() {
+  try {
+    const r = await fetch('/template/template_contrato.docx');
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    tplBuffer = await r.arrayBuffer();
+    setStatus('ok', '✅ Template carregado de <code>/template/template_contrato.docx</code>');
+  } catch {
+    setStatus('err', '⚠️ Template não encontrado em <code>/template/template_contrato.docx</code> — selecione o arquivo manualmente abaixo.');
+    document.getElementById('tmanual').style.display = 'block';
+  }
+}
+function setStatus(tipo, html) {
+  const el = document.getElementById('tstatus');
+  el.className = 'tstatus ' + tipo;
+  el.innerHTML = html;
+}
+function toggleManual() {
+  const el = document.getElementById('tmanual');
+  el.style.display = el.style.display === 'none' ? 'block' : 'none';
+}
+document.getElementById('tfile').addEventListener('change', function(e) {
+  const f = e.target.files[0]; if (!f) return;
+  const r = new FileReader();
+  r.onload = ev => { tplBuffer = ev.target.result; setStatus('ok', '✅ Template carregado: <strong>' + f.name + '</strong>'); };
+  r.readAsArrayBuffer(f);
+});
+
+// ── Itens ─────────────────────────────────────────────────────────
+function adicionarItem(desc='', qtd='', prazo='', valor='') {
+  itemCount++;
+  const n = itemCount;
+  const wrap = document.getElementById('itensWrap');
+  const d = document.createElement('div');
+  d.className = 'item-card'; d.id = 'item_' + n;
+  d.innerHTML =
+    '<div class="item-tit">Item ' + n + '</div>' +
+    '<button type="button" class="btn-rm" onclick="removerItem(' + n + ')" title="Remover">✕</button>' +
+    '<div class="g2" style="margin-bottom:10px">' +
+      '<div class="campo"><label>Descrição</label>' +
+        '<input class="i-desc" placeholder="Descreva o item, serviço ou material" value="' + desc + '"></div>' +
+      '<div class="campo"><label>Quantidade / Unidade</label>' +
+        '<input class="i-qtd" placeholder="Ex: 1 / 50 unid. / 200 m²" value="' + qtd + '"></div>' +
+    '</div>' +
+    '<div class="g2">' +
+      '<div class="campo"><label>Prazo de entrega / execução</label>' +
+        '<input class="i-prazo" placeholder="Ex: 30 dias / Imediato" value="' + prazo + '"></div>' +
+      '<div class="campo"><label>Valor Total do Item (R$)</label>' +
+        '<input class="i-valor" placeholder="Ex: 3.500,00" value="' + valor + '"></div>' +
+    '</div>';
+  wrap.appendChild(d);
+  renumerar();
+}
+function removerItem(n) {
+  const el = document.getElementById('item_' + n);
+  if (el) { el.remove(); renumerar(); }
+}
+function renumerar() {
+  document.querySelectorAll('#itensWrap .item-tit').forEach((el, i) => { el.textContent = 'Item ' + (i+1); });
+}
+function coletarItens() {
+  return Array.from(document.querySelectorAll('#itensWrap .item-card')).map((c, i) => ({
+    numero_item: String(i + 1),
+    descricao_item: c.querySelector('.i-desc').value || '',
+    quantidade_item: c.querySelector('.i-qtd').value || '1',
+    prazo_item:  c.querySelector('.i-prazo').value || '',
+    valor_item:  c.querySelector('.i-valor').value || '',
+  }));
+}
+
+// ── Gerar ─────────────────────────────────────────────────────────
+function gerarContrato() {
+  if (!tplBuffer) { alert('Nenhum template carregado. Selecione o arquivo .docx.'); return; }
+  const itens = coletarItens();
+  if (!itens.length) { alert('Adicione pelo menos 1 item ao contrato.'); return; }
+  const dados = Object.fromEntries(new FormData(document.getElementById('form')));
+  dados.itens = itens;
+  try {
+    const zip = new PizZip(tplBuffer);
+    const doc = new docxtemplater(zip, { paragraphLoop: true, linebreaks: true });
+    doc.render(dados);
+    const blob = doc.getZip().generate({ type: 'blob', mimeType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' });
+    saveAs(blob, 'Contrato_' + (dados.numero_contrato || 'novo').replace(/\//g, '-') + '.docx');
+  } catch(e) {
+    console.error(e);
+    alert('Erro ao gerar contrato:\n' + (e.message || e));
+  }
+}
+function limpar() {
+  if (!confirm('Limpar todos os campos?')) return;
+  document.getElementById('form').reset();
+  document.getElementById('itensWrap').innerHTML = '';
+  itemCount = 0;
+  adicionarItem();
+}
+
+// ── Init ──────────────────────────────────────────────────────────
+autoLoad();
+adicionarItem();
+</script>
+</body>
+</html>
